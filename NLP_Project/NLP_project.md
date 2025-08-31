@@ -44,8 +44,8 @@ We explored two extensions:
    - Goal: test whether additional layers improve convergence, stability, or circuit formation.  
 
 2. **New Iterative Algorithms**:  
-   - **Factorial**: compute running product `1·2·…·N`.  
-   - **Fibonacci**: generate sequence `F1…Fn`.  
+   - **Factorial**: compute running product `1·2·…·N mod 11`.  
+   - **Fibonacci**: generate sequence `F1…Fn mod 11`.  
    - These tasks were encoded as iterative state updates and trained with the same architecture.  
 
 ### 2.3 Evaluation
@@ -110,7 +110,59 @@ The 6-layer transformers achieved near-perfect accuracy (~0.99–1.0) and even m
 
 ---
 
-### 3.5 Factorial and Fibonacci  
+### 3.5 Factorial  
+
+Our findings show that even though factorial is more complex than polynomial it still learnable with small transformers. 
+Transfer from polynomial and fibonacci helps, indicating shared iterative structure.
+
+#### Factorial - stand alone
+
+*Figure 10: Accuracy curve for factorial task (from scratch). Model converges quickly to ~1.0.*
+![Accuracy factorial](outputs/accuracy_factorial.png)  
+
+*Figure 11: Attention heads for factorial task. Diagonal iteration-head-like structure visible.*
+![Attention factorial](outputs/attn_factorial.png)  
+
+#### Skill transfer: Polynomial → Factorial
+
+*Figure 12: Transfer learning results. Pretraining on polynomial accelerates convergence factorial*
+![Accuracy factorial after polynomial](outputs/accuracy_factorial_after_poly.png)
+
+*Figure 13: Attention maps after transfer from polynomial. Iteration-head patterns appear sharper and more stable.*
+![Attention factorial after polynomial](outputs/attn_factorial_after_poly.png)
+
+#### Skill transfer: Fibonacci → Factorial
+
+*Figure 14: Transfer learning results. Pretraining on Fibonacci converges quickly, but no clear speedup*
+![Accuracy factorial after polynomial](outputs/accuracy_factorial_after_fibonacci.png)
+
+*Figure 15: Attention maps after transfer from fibonacci. Iteration-head patterns appear cleaner suggesting pretraining stabilizes head formation.*
+![Attention factorial after polynomial](outputs/attn_factorial_after_fibonacci.png)
+
+---
+
+### 3.6 Fibonacci
+
+Fibonacci is harder than factorial, but transfer learning helps a lot. Iteration heads adapt to capture additive recursion, though circuits are less stable without pretraining
+
+#### Fibonacci - stand alone
+
+*Figure 16: Accuracy curve for Fibonacci task. Model converges to ~1.0 but slightly less stable in early epochs..*
+![Accuracy fibonacci](outputs/accuracy_fibonacci.png)
+
+*Figure 17: Attention heads for Fibonacci task. Less sharp than factorial/polynomial, but improves with transfer (see below).*
+![Attention fibonacci](outputs/attn_fibonacci.png)  
+
+
+#### Skill transfer: Polynomial → Fibonacci
+
+*Figure 18: Transfer learning results. Pretraining on polynomial accelerates convergence for Fibonacci.*
+![Accuracy fibonacci after polynomial](outputs/accuracy_fibonacci_after_poly.png)  
+
+
+*Figure 19: Attention maps after transfer from polynomial. Much cleaner diagonal structure emerges, confirming transfer benefit.*
+![Attention fibonacci after polynomial](outputs/attn_fibonacci_after_poly.png)  
+
 
 ---
 
@@ -123,6 +175,16 @@ When scaling to **4 and 6 layers**, accuracy improved slightly and training stab
 
 This supports the interpretation that **iteration heads are minimal circuits**: once the architecture is sufficiently deep to host them (2 layers), adding more depth provides little new capability. Instead, extra layers primarily act as stabilizers and reduce variance across runs.
 
+
+Our factorial and Fibonacci experiments show that small transformers can indeed generalize beyond the original polynomial task. However, these tasks highlight several important points:
+
+1. **Learnability**: Both factorial and Fibonacci converge to high accuracy, but training stability is lower than for polynomial.
+2. **Transfer benefits**: Pretraining on polynomial significantly accelerates convergence and sharpens attention patterns, showing that iteration heads are transferable circuits.
+3. **Task differences**: Factorial learning is relatively stable, while Fibonacci requires more epochs and benefits more from transfer, suggesting additive recursion is harder for small transformers to learn from scratch.
+4. **Interpretability**: Attention maps reveal iteration-head-like diagonals, but without pretraining, they are noisier. Transfer produces cleaner heads, reinforcing the idea that small transformers reuse existing iterative circuits when possible.
+
+This confirms and extends the **Skill Transfer hypothesis** of Cabannes et al. (2024): pretrained iteration heads can bootstrap learning on harder algorithmic tasks, though their effectiveness depends on task similarity (polynomial → factorial stronger than polynomial → Fibonacci).
+
 ---
 
 ## 5. Code  
@@ -131,7 +193,7 @@ All code, including replication and extended experiments, is available at:
 - Original repo: [facebookresearch/pal](https://github.com/facebookresearch/pal/tree/main)  
 - Our repository: [NLP Project](https://github.com/avivabou/pal/NLP_Project.git)
 - Replication notebook: `replication.ipynb`  
-- 
+- Factorial and Fibonacci notebook: `new_iterative_algo.ipynb`
 
 ---
 
